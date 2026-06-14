@@ -16,7 +16,7 @@
   "homepage": "https://connordibble.dev",
   "repository": {
     "type": "git",
-    "url": "https://github.com/connordibble/zod-ai-tool"
+    "url": "git+https://github.com/connordibble/zod-ai-tool.git"
   },
   "bugs": {
     "url": "https://github.com/connordibble/zod-ai-tool/issues"
