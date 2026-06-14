@@ -80,4 +80,5 @@ export interface OpenAIResponsesTool {
   name: string;
   description: string;
   parameters: JsonSchemaObject;
+  strict: false;
 }

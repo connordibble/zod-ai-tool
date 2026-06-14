@@ -17,6 +17,7 @@ const tool = defineAITool({
 
 const anthropicTool: Anthropic.Messages.Tool = tool.anthropic;
 const openaiChatTool: OpenAI.Chat.Completions.ChatCompletionTool = tool.openai;
+const openaiResponsesTool: OpenAI.Responses.FunctionTool = tool.openaiResponses;
 
 describe('SDK type compatibility', () => {
   it('Anthropic tool slots into the SDK Tool type', () => {
@@ -25,5 +26,9 @@ describe('SDK type compatibility', () => {
 
   it('OpenAI chat tool slots into the SDK ChatCompletionTool type', () => {
     expect(openaiChatTool.type).toBe('function');
+  });
+
+  it('OpenAI Responses tool slots into the SDK FunctionTool type', () => {
+    expect(openaiResponsesTool.strict).toBe(false);
   });
 });

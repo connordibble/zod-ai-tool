@@ -19,6 +19,7 @@ describe('toOpenAIResponsesTool (Responses API)', () => {
     expect(tool.name).toBe('classify_activity');
     expect(tool.description).toBe('Classify an engineering activity.');
     expect(tool.parameters.type).toBe('object');
+    expect(tool.strict).toBe(false);
     // Flat shape: no nested `function` wrapper.
     expect(tool).not.toHaveProperty('function');
   });

@@ -30,7 +30,8 @@ export function toOpenAIFunction<TSchema extends ZodObjectSchema>(
  * Build an OpenAI Responses API tool from a Zod object schema.
  *
  * The Responses API uses a flat function-tool shape (no nested `function`
- * object). Pass it to `openai.responses.create({ tools: [tool] })`.
+ * object). This builder explicitly opts out of strict mode so loose schemas
+ * remain valid. Pass it to `openai.responses.create({ tools: [tool] })`.
  */
 export function toOpenAIResponsesTool<TSchema extends ZodObjectSchema>(
   config: AIToolConfig<TSchema>,
@@ -40,5 +41,6 @@ export function toOpenAIResponsesTool<TSchema extends ZodObjectSchema>(
     name: config.name,
     description: config.description,
     parameters: zodObjectToJsonSchema(config.schema, config.diagnostics),
+    strict: false,
   };
 }

@@ -15,6 +15,7 @@ exports[`toOpenAIResponsesTool (Responses API) > matches a stable snapshot 1`] =
     ],
     "type": "object",
   },
+  "strict": false,
   "type": "function",
 }
 `;
