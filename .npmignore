@@ -1,0 +1,12 @@
+# Belt-and-suspenders alongside package.json "files". Only dist/ + README ship.
+src/
+test/
+examples/
+.github/
+tsconfig.json
+tsconfig.build.json
+tsup.config.ts
+vitest.config.ts
+eslint.config.mjs
+coverage/
+*.tsbuildinfo
