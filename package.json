@@ -18,6 +18,9 @@
     "type": "git",
     "url": "git+https://github.com/connordibble/zod-ai-tool.git"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "bugs": {
     "url": "https://github.com/connordibble/zod-ai-tool/issues"
   },
