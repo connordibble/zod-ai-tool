@@ -54,6 +54,12 @@ jobs:
     needs: test
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    # Binds the job to the `release` environment. Configure its protection rules
+    # (restrict deployments to `main`, hold NPM_TOKEN as an environment secret,
+    # optional required reviewer) in repo Settings → Environments → release.
+    environment:
+      name: release
+      url: https://www.npmjs.com/package/zod-ai-tool
     permissions:
       contents: write # create releases, tags, and the changelog commit
       issues: write # comment on released issues
