@@ -1,6 +1,6 @@
 {
   "name": "zod-ai-tool",
-  "version": "0.0.0-development",
+  "version": "1.0.0",
   "description": "Derive Anthropic and OpenAI tool definitions from a Zod schema — one source, no drift.",
   "keywords": [
     "zod",
