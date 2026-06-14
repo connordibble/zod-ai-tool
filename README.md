@@ -1,5 +1,9 @@
 # zod-ai-tool
 
+[![CI](https://github.com/connordibble/zod-ai-tool/actions/workflows/ci.yml/badge.svg)](https://github.com/connordibble/zod-ai-tool/actions/workflows/ci.yml)
+[![npm version](https://img.shields.io/npm/v/zod-ai-tool.svg)](https://www.npmjs.com/package/zod-ai-tool)
+[![license: MIT](https://img.shields.io/npm/l/zod-ai-tool.svg)](./LICENSE)
+
 Derive Anthropic and OpenAI tool definitions from a Zod schema — one source, no drift.
 
 ## The problem
@@ -121,12 +125,13 @@ the "contract lives in one place" section.
 Both Zod 3 and Zod 4 are supported. On Zod 4 the built-in `z.toJSONSchema()` is used; on
 Zod 3 the package falls back to [`zod-to-json-schema`](https://www.npmjs.com/package/zod-to-json-schema).
 
-## v0 scope: loose, not strict
+## Scope: loose, not strict
 
-v0 emits **loose**, provider-shaped JSON Schema and does not set `strict: true`. It does not
-yet guarantee OpenAI strict-mode compatibility (which requires `additionalProperties: false`,
-every field listed in `required`, and optional fields modeled as nullable). Validate model
-output with the Zod schema at runtime regardless — that is the durable guarantee.
+This package emits **loose**, provider-shaped JSON Schema and does not set `strict: true`. It
+does not guarantee OpenAI strict-mode compatibility (which requires `additionalProperties:
+false`, every field listed in `required`, and optional fields modeled as nullable) — that is
+planned as an additive, opt-in feature. Validate model output with the Zod schema at runtime
+regardless — that is the durable guarantee.
 
 ## Unsupported Zod constructs
 
@@ -147,6 +152,24 @@ defineAITool({ name, description, schema, diagnostics: 'silent' }); // 'silent' 
 
 The root schema must be a Zod object — both providers require object-shaped tool input.
 Passing a scalar or array root throws a clear error; wrap it as `z.object({ value: … })`.
+
+## Versioning & releases
+
+Releases are fully automated with [semantic-release](https://semantic-release.gitbook.io/).
+Every push to `main` runs the CI matrix (Node 20/22 × Zod 3/4); once it passes,
+[Conventional Commits](https://www.conventionalcommits.org/) determine the next version:
+
+| Commit type                         | Release |
+| ----------------------------------- | ------- |
+| `fix:`                              | patch   |
+| `feat:`                             | minor   |
+| `feat!:` / `BREAKING CHANGE:` footer | major   |
+
+semantic-release then bumps the version, updates [`CHANGELOG.md`](./CHANGELOG.md), publishes to
+npm with [provenance](https://docs.npmjs.com/generating-provenance-statements), and cuts a
+[GitHub Release](https://github.com/connordibble/zod-ai-tool/releases). Other commit types
+(`chore`, `docs`, `test`, `ci`, `refactor`) do not trigger a release. Follow the same commit
+convention in PRs so the version bump stays accurate.
 
 ## License
 

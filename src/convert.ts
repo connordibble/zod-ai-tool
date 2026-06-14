@@ -168,7 +168,7 @@ function rawConvert(schema: ZodObjectSchema): Record<string, unknown> {
  * Convert a root Zod object schema to a provider-ready JSON Schema object.
  *
  * - Throws if the schema is not a root Zod object (no magical unwrapping).
- * - Strips `$schema` and the top-level `additionalProperties` (loose v0 output).
+ * - Strips `$schema` and the top-level `additionalProperties` (loose output).
  * - Guarantees a `required` array is always present.
  */
 export function zodObjectToJsonSchema(
