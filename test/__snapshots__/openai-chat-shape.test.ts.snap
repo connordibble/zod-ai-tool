@@ -1,0 +1,31 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`toOpenAIFunction (Chat Completions) > matches a stable snapshot 1`] = `
+{
+  "function": {
+    "description": "d",
+    "name": "classify_activity",
+    "parameters": {
+      "properties": {
+        "category": {
+          "enum": [
+            "research",
+            "development",
+            "other",
+          ],
+          "type": "string",
+        },
+        "qualifies": {
+          "type": "boolean",
+        },
+      },
+      "required": [
+        "qualifies",
+        "category",
+      ],
+      "type": "object",
+    },
+  },
+  "type": "function",
+}
+`;

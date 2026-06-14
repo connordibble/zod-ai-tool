@@ -1,0 +1,25 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`toAnthropicTool > matches a stable snapshot 1`] = `
+{
+  "description": "d",
+  "input_schema": {
+    "properties": {
+      "confidence": {
+        "maximum": 100,
+        "minimum": 0,
+        "type": "integer",
+      },
+      "qualifies": {
+        "type": "boolean",
+      },
+    },
+    "required": [
+      "qualifies",
+      "confidence",
+    ],
+    "type": "object",
+  },
+  "name": "classify_activity",
+}
+`;
