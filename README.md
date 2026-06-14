@@ -4,9 +4,15 @@
 [![npm version](https://img.shields.io/npm/v/zod-ai-tool.svg)](https://www.npmjs.com/package/zod-ai-tool)
 [![license: MIT](https://img.shields.io/npm/l/zod-ai-tool.svg)](./LICENSE)
 
-Derive Anthropic and OpenAI tool definitions from a Zod schema — one source, no drift.
+Build Anthropic and OpenAI tool definitions from one Zod schema, then use that same schema
+to validate the model's tool input.
 
-## The problem
+This package extracts one boundary from ResearchLog, an R&D evidence system where model
+output must pass a contract before it can be written to the database. The surrounding design
+is described in
+[*When the Model Is a Draft, Not the Source of Truth*](https://connordibble.dev/writing/when-the-model-is-a-draft).
+
+## The Problem
 
 When you call a model with tool use, you give it a schema describing the shape you expect
 back (`input_schema` for Anthropic, `parameters` for OpenAI). You also need a Zod schema to
@@ -14,26 +20,25 @@ validate that output at runtime before it touches your database.
 
 Write those separately and they drift. The tool definition says `confidence` is `0–100`; the
 Zod schema doesn't cap it. A `category` enum gains a value in one place but not the other.
-These mismatches don't throw — they silently produce unvalidated data the rest of your system
-treats as trusted.
+Nothing crashes. The contract has split in two.
 
-The fix is to treat the Zod schema as the single definition and derive everything else from
-it. That's all this package does.
+`zod-ai-tool` keeps the provider schema and runtime validator at one callsite. The Zod schema
+is the source, and the provider objects are derived from it. That is the whole package.
 
-## Install
+## Installation
 
 ```bash
 pnpm add zod-ai-tool zod
 ```
 
-`zod` is a peer dependency. The Anthropic and OpenAI SDKs are **not** required — this package
-imports their types only, and ships its own structurally-compatible types so nothing breaks
-if you have neither installed.
+`zod` is the only peer dependency. The package defines its provider types locally, so the
+Anthropic and OpenAI SDKs are not required. Development tests check those local types against
+the current SDK types.
 
-## `defineAITool` — the pattern
+## One Definition
 
-Lead with this. It keeps the tool definition and the validator coupled at one callsite, so
-they cannot drift.
+Start with `defineAITool`. It returns the provider definitions, the original schema, and two
+ways to validate tool input.
 
 ```typescript
 import { z } from 'zod';
@@ -53,7 +58,7 @@ const classificationTool = defineAITool({
   schema: ClassificationSchema,
 });
 
-// Use the tool definition in the API call.
+// Send the derived tool definition to the provider.
 const response = await anthropic.messages.create({
   model: 'claude-sonnet-4-6',
   max_tokens: 1024,
@@ -61,7 +66,7 @@ const response = await anthropic.messages.create({
   messages: [{ role: 'user', content: prompt }],
 });
 
-// Parse the result with the SAME schema — same source, guaranteed alignment.
+// Validate the result with the same schema before it reaches application data.
 const toolInput = response.content.find((block) => block.type === 'tool_use')?.input;
 const parsed = classificationTool.validate(toolInput); // throws ZodError if malformed
 ```
@@ -73,13 +78,13 @@ const parsed = classificationTool.validate(toolInput); // throws ZodError if mal
   anthropic,         // Anthropic tool definition (Messages API)
   openai,            // OpenAI tool definition (Chat Completions API)
   openaiResponses,   // OpenAI tool definition (Responses API, flat shape)
-  validate,          // (input: unknown) => z.infer<typeof schema>  — throws on invalid
-  safeParse,         // (input: unknown) => Zod SafeParseReturn      — never throws
+  validate,          // (input: unknown) => z.infer<typeof schema>; throws on invalid
+  safeParse,         // (input: unknown) => Zod SafeParseReturn; never throws
   schema,            // the original Zod schema
 }
 ```
 
-## Escape hatches — just the conversion
+## Provider Builders
 
 If you only want a provider tool object, use the builders directly.
 
@@ -94,69 +99,67 @@ const openaiResponsesTool = toOpenAIResponsesTool({ name, description, schema })
 OpenAI uses two tool shapes: the Chat Completions API nests the function under a `function`
 key; the Responses API uses a flat shape. This package provides both.
 
-## Why this exists
+## Why This Exists
 
 `openai` ships a `zodFunction()` helper and the Vercel AI SDK accepts a Zod schema as
-`inputSchema`. This package is for the case where you **don't** want a full AI framework,
-**don't** want a runtime dependency on the OpenAI or Anthropic SDKs, and want the *same* Zod
-schema to produce provider-shaped tool definitions while remaining your runtime validator.
-That's the whole niche.
+`inputSchema`. Those are good choices inside their respective stacks. This package covers the
+narrower case where an application talks to Anthropic and OpenAI directly and wants one
+validation contract without adopting a larger AI framework.
 
-This pattern is extracted from production code in ResearchLog and described in
-[*When the model is a draft*](https://connordibble.dev/writing/when-the-model-is-a-draft) —
-the "contract lives in one place" section.
+It converts schemas and validates input. It stays small on purpose.
 
-## What it does NOT do
+## Scope
 
-- It does not call the API. You bring your own SDK client.
-- It does not handle response parsing beyond Zod validation. `validate`/`safeParse` are just
-  `schema.parse`/`schema.safeParse`.
-- It does not support streaming tool use.
+- It does not call a provider API. You bring your own SDK client.
+- It does not parse responses beyond Zod validation. `validate` and `safeParse` call
+  `schema.parse` and `schema.safeParse`.
+- It does not orchestrate tool-call loops or streams.
 - It does not generate strict-mode schemas (see below).
 
-## Peer dependencies
+## Peer Dependency
 
-| Package            | Range      | Required? | Used for                              |
-| ------------------ | ---------- | --------- | ------------------------------------- |
-| `zod`              | `>=3.0.0`  | Yes       | Schema definition + runtime validation |
-| `@anthropic-ai/sdk`| any        | Optional  | Types only (`import type`)            |
-| `openai`           | any        | Optional  | Types only (`import type`)            |
+| Package | Range                  | Used for                              |
+| ------- | ---------------------- | ------------------------------------- |
+| `zod`   | `^3.25.28 \|\| ^4.0.0` | Schema definition + runtime validation |
 
 Both Zod 3 and Zod 4 are supported. On Zod 4 the built-in `z.toJSONSchema()` is used; on
 Zod 3 the package falls back to [`zod-to-json-schema`](https://www.npmjs.com/package/zod-to-json-schema).
 
-## Scope: loose, not strict
+## Loose Schemas
 
-This package emits **loose**, provider-shaped JSON Schema and does not set `strict: true`. It
-does not guarantee OpenAI strict-mode compatibility (which requires `additionalProperties:
-false`, every field listed in `required`, and optional fields modeled as nullable) — that is
-planned as an additive, opt-in feature. Validate model output with the Zod schema at runtime
-regardless — that is the durable guarantee.
+This package emits loose, provider-shaped JSON Schema. Responses API tools explicitly set
+`strict: false`; Chat Completions remains non-strict by default.
 
-## Unsupported Zod constructs
+The cost is weaker provider-side enforcement. OpenAI strict mode requires
+`additionalProperties: false`, every property in `required`, and optional values represented
+as nullable. This package does not rewrite a Zod schema to meet those rules. Validate every
+tool input with the original Zod schema before using or persisting it.
 
-The output JSON Schema reflects the schema's **input** shape, not any post-transform output.
-These constructs do not round-trip cleanly and are converted best-effort:
+## Unsupported Zod Constructs
+
+Some Zod behavior has no clean JSON Schema representation. For these constructs, the provider
+schema describes the model's input shape before Zod applies any transform or custom check:
 
 - `.transform()`
 - `.pipe()`
 - `.preprocess()`
 - `.refine()` / `.superRefine()`
 
-By default the package emits a single `console.warn` when it detects one. Control this with
-the `diagnostics` option:
+The package emits one `console.warn` when it detects one of these constructs. Control that
+behavior with the `diagnostics` option:
 
 ```typescript
 defineAITool({ name, description, schema, diagnostics: 'silent' }); // 'silent' | 'warn' | 'throw'
 ```
 
-The root schema must be a Zod object — both providers require object-shaped tool input.
-Passing a scalar or array root throws a clear error; wrap it as `z.object({ value: … })`.
+The root schema must be a Zod object because both providers require object-shaped tool input.
+Passing a scalar or array root throws. Wrap it as `z.object({ value: z.string() })` instead.
 
-## Versioning & releases
+## Versioning and Releases
 
 Releases are fully automated with [semantic-release](https://semantic-release.gitbook.io/).
-Every push to `main` runs the CI matrix (Node 20/22 × Zod 3/4); once it passes,
+Every push to `main` runs the CI matrix across Node 20, 22, and 24, plus the minimum and
+current supported releases of Zod 3 and 4. Once it passes,
 [Conventional Commits](https://www.conventionalcommits.org/) determine the next version:
 
 | Commit type                         | Release |
@@ -165,7 +168,7 @@ Every push to `main` runs the CI matrix (Node 20/22 × Zod 3/4); once it passes,
 | `feat:`                             | minor   |
 | `feat!:` / `BREAKING CHANGE:` footer | major   |
 
-semantic-release then bumps the version, updates [`CHANGELOG.md`](./CHANGELOG.md), publishes to
+The release job then bumps the version, updates [`CHANGELOG.md`](./CHANGELOG.md), publishes to
 npm with [provenance](https://docs.npmjs.com/generating-provenance-statements), and cuts a
 [GitHub Release](https://github.com/connordibble/zod-ai-tool/releases). Other commit types
 (`chore`, `docs`, `test`, `ci`, `refactor`) do not trigger a release. Follow the same commit
