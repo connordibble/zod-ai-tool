@@ -149,9 +149,10 @@ function rawConvert(schema: ZodObjectSchema): Record<string, unknown> {
   /* v8 ignore start -- version-gated; covered by the matching CI matrix cell */
   if (typeof zodNamespace.toJSONSchema === 'function') {
     // Zod 4 built-in. `io: 'input'` yields the pre-transform shape the model produces;
-    // `unrepresentable: 'any'` keeps unsupported constructs from throwing.
+    // `unrepresentable: 'any'` keeps unsupported constructs from throwing. Zod 4.0
+    // expects `draft-7`; newer releases normalize it to `draft-07`.
     return zodNamespace.toJSONSchema(schema, {
-      target: 'draft-07',
+      target: 'draft-7',
       io: 'input',
       unrepresentable: 'any',
     });
