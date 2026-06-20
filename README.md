@@ -1,6 +1,7 @@
 # zod-ai-tool
 
 [![CI](https://github.com/connordibble/zod-ai-tool/actions/workflows/ci.yml/badge.svg)](https://github.com/connordibble/zod-ai-tool/actions/workflows/ci.yml)
+[![coverage: 95%+](https://img.shields.io/badge/coverage-95%25%2B-brightgreen.svg)](https://github.com/connordibble/zod-ai-tool/actions/workflows/ci.yml)
 [![npm version](https://img.shields.io/npm/v/zod-ai-tool.svg)](https://www.npmjs.com/package/zod-ai-tool)
 [![license: MIT](https://img.shields.io/npm/l/zod-ai-tool.svg)](./LICENSE)
 
