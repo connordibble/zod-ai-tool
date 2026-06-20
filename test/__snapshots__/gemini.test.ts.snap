@@ -1,0 +1,25 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`toGeminiFunctionDeclaration > matches a stable snapshot 1`] = `
+{
+  "description": "d",
+  "name": "classify_activity",
+  "parameters": {
+    "properties": {
+      "confidence": {
+        "maximum": 100,
+        "minimum": 0,
+        "type": "integer",
+      },
+      "qualifies": {
+        "type": "boolean",
+      },
+    },
+    "required": [
+      "qualifies",
+      "confidence",
+    ],
+    "type": "object",
+  },
+}
+`;

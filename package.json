@@ -1,19 +1,21 @@
 {
   "name": "zod-ai-tool",
   "version": "1.0.0",
-  "description": "Derive Anthropic and OpenAI tool definitions from a Zod schema — one source, no drift.",
+  "description": "Derive Anthropic, OpenAI, and Gemini tool definitions from a Zod schema — one source, no drift.",
   "keywords": [
     "zod",
     "ai",
     "anthropic",
     "openai",
+    "gemini",
+    "google",
     "tool-use",
     "json-schema",
     "typescript"
   ],
   "author": "Connor Dibble <dibbleconnor@gmail.com>",
   "license": "MIT",
-  "homepage": "https://connordibble.dev",
+  "homepage": "https://github.com/connordibble/zod-ai-tool#readme",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/connordibble/zod-ai-tool.git"

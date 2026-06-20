@@ -19,6 +19,7 @@ describe('defineAITool', () => {
     expect(tool.anthropic.input_schema.type).toBe('object');
     expect(tool.openai.function.name).toBe('classify_activity');
     expect(tool.openaiResponses.name).toBe('classify_activity');
+    expect(tool.gemini.name).toBe('classify_activity');
   });
 
   it('exposes the original schema', () => {

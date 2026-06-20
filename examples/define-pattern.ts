@@ -16,6 +16,10 @@ const classificationTool = defineAITool({
   schema: ClassificationSchema,
 });
 
+// Provider definitions are available as:
+// classificationTool.anthropic, classificationTool.openai,
+// classificationTool.openaiResponses, and classificationTool.gemini.
+
 async function run(prompt: string, anthropic: AnthropicLike) {
   // Use the tool definition in the API call.
   const response = await anthropic.messages.create({

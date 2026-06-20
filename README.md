@@ -5,8 +5,8 @@
 [![npm version](https://img.shields.io/npm/v/zod-ai-tool.svg)](https://www.npmjs.com/package/zod-ai-tool)
 [![license: MIT](https://img.shields.io/npm/l/zod-ai-tool.svg)](./LICENSE)
 
-Build Anthropic and OpenAI tool definitions from one Zod schema, then use that same schema
-to validate the model's tool input.
+Build Anthropic, OpenAI, and Gemini tool definitions from one Zod schema, then use that
+same schema to validate the model's tool input.
 
 This package extracts one boundary from ResearchLog, an R&D evidence system where model
 output must pass a contract before it can be written to the database. The surrounding design
@@ -16,8 +16,9 @@ is described in
 ## The Problem
 
 When you call a model with tool use, you give it a schema describing the shape you expect
-back (`input_schema` for Anthropic, `parameters` for OpenAI). You also need a Zod schema to
-validate that output at runtime before it touches your database.
+back (`input_schema` for Anthropic, `parameters` for OpenAI, or a function declaration for
+Gemini). You also need a Zod schema to validate that output at runtime before it touches your
+database.
 
 Write those separately and they drift. The tool definition says `confidence` is `0–100`; the
 Zod schema doesn't cap it. A `category` enum gains a value in one place but not the other.
@@ -32,9 +33,9 @@ is the source, and the provider objects are derived from it. That is the whole p
 pnpm add zod-ai-tool zod
 ```
 
-`zod` is the only peer dependency. The package defines its provider types locally, so the
-Anthropic and OpenAI SDKs are not required. Development tests check those local types against
-the current SDK types.
+`zod` is the only peer dependency. The package defines its provider types locally, so provider
+SDKs are not required at runtime. Development tests check Anthropic and OpenAI local types
+against the current SDK types.
 
 ## One Definition
 
@@ -79,6 +80,7 @@ const parsed = classificationTool.validate(toolInput); // throws ZodError if mal
   anthropic,         // Anthropic tool definition (Messages API)
   openai,            // OpenAI tool definition (Chat Completions API)
   openaiResponses,   // OpenAI tool definition (Responses API, flat shape)
+  gemini,            // Gemini function declaration
   validate,          // (input: unknown) => z.infer<typeof schema>; throws on invalid
   safeParse,         // (input: unknown) => Zod SafeParseReturn; never throws
   schema,            // the original Zod schema
@@ -90,22 +92,31 @@ const parsed = classificationTool.validate(toolInput); // throws ZodError if mal
 If you only want a provider tool object, use the builders directly.
 
 ```typescript
-import { toAnthropicTool, toOpenAIFunction, toOpenAIResponsesTool } from 'zod-ai-tool';
+import {
+  toAnthropicTool,
+  toGeminiFunctionDeclaration,
+  toOpenAIFunction,
+  toOpenAIResponsesTool,
+} from 'zod-ai-tool';
 
 const anthropicTool = toAnthropicTool({ name, description, schema });          // Messages API
 const openaiChatTool = toOpenAIFunction({ name, description, schema });        // Chat Completions
 const openaiResponsesTool = toOpenAIResponsesTool({ name, description, schema }); // Responses API
+const geminiDeclaration = toGeminiFunctionDeclaration({ name, description, schema }); // Gemini
 ```
 
 OpenAI uses two tool shapes: the Chat Completions API nests the function under a `function`
 key; the Responses API uses a flat shape. This package provides both.
 
+Gemini accepts function declarations inside a `functionDeclarations` array. This package
+returns the declaration and leaves SDK configuration and function-calling modes to your app.
+
 ## Why This Exists
 
 `openai` ships a `zodFunction()` helper and the Vercel AI SDK accepts a Zod schema as
 `inputSchema`. Those are good choices inside their respective stacks. This package covers the
-narrower case where an application talks to Anthropic and OpenAI directly and wants one
-validation contract without adopting a larger AI framework.
+narrower case where an application talks to Anthropic, OpenAI, or Gemini directly and wants
+one validation contract without adopting a larger AI framework.
 
 It converts schemas and validates input. It stays small on purpose.
 
@@ -115,7 +126,7 @@ It converts schemas and validates input. It stays small on purpose.
 - It does not parse responses beyond Zod validation. `validate` and `safeParse` call
   `schema.parse` and `schema.safeParse`.
 - It does not orchestrate tool-call loops or streams.
-- It does not generate strict-mode schemas (see below).
+- It does not enable OpenAI strict mode unless you opt in with `strict: true`.
 
 ## Peer Dependency
 
@@ -124,17 +135,46 @@ It converts schemas and validates input. It stays small on purpose.
 | `zod`   | `^3.25.28 \|\| ^4.0.0` | Schema definition + runtime validation |
 
 Both Zod 3 and Zod 4 are supported. On Zod 4 the built-in `z.toJSONSchema()` is used; on
-Zod 3 the package falls back to [`zod-to-json-schema`](https://www.npmjs.com/package/zod-to-json-schema).
+Zod 3 the package lazily falls back to
+[`zod-to-json-schema`](https://www.npmjs.com/package/zod-to-json-schema).
 
-## Loose Schemas
+## Loose By Default
 
-This package emits loose, provider-shaped JSON Schema. Responses API tools explicitly set
-`strict: false`; Chat Completions remains non-strict by default.
+This package emits loose, provider-shaped JSON Schema by default. Responses API tools
+explicitly set `strict: false`; Chat Completions remains non-strict by default.
 
-The cost is weaker provider-side enforcement. OpenAI strict mode requires
-`additionalProperties: false`, every property in `required`, and optional values represented
-as nullable. This package does not rewrite a Zod schema to meet those rules. Validate every
-tool input with the original Zod schema before using or persisting it.
+The cost is weaker provider-side enforcement. Validate every tool input with the original Zod
+schema before using or persisting it.
+
+## OpenAI Strict Mode
+
+Pass `strict: true` to emit OpenAI strict-mode schemas:
+
+```typescript
+const tool = toOpenAIResponsesTool({
+  name,
+  description,
+  schema: z.object({
+    required_value: z.string(),
+    optional_value: z.string().nullable().optional(),
+  }),
+  strict: true,
+});
+```
+
+Strict mode affects OpenAI builders only. It sets `additionalProperties: false` on object
+schemas, marks every property as required, and sets the provider tool's `strict` flag. Because
+OpenAI represents optional values with `null`, optional fields must already accept `null` in
+the Zod schema. A plain `z.string().optional()` field throws under `strict: true`; use
+`.nullable().optional()` or `.nullish()` instead.
+
+```typescript
+// Throws under `strict: true`
+z.object({ optional_value: z.string().optional() });
+
+// Accepted under `strict: true`
+z.object({ optional_value: z.string().nullable().optional() });
+```
 
 ## Unsupported Zod Constructs
 
@@ -153,7 +193,7 @@ behavior with the `diagnostics` option:
 defineAITool({ name, description, schema, diagnostics: 'silent' }); // 'silent' | 'warn' | 'throw'
 ```
 
-The root schema must be a Zod object because both providers require object-shaped tool input.
+The root schema must be a Zod object because providers require object-shaped tool input.
 Passing a scalar or array root throws. Wrap it as `z.object({ value: z.string() })` instead.
 
 ## Versioning and Releases

@@ -1,4 +1,5 @@
 import { zodObjectToJsonSchema } from './convert.js';
+import { toOpenAIStrictJsonSchema } from './openai-strict.js';
 import type {
   AIToolConfig,
   OpenAIChatTool,
@@ -16,12 +17,15 @@ import type {
 export function toOpenAIFunction<TSchema extends ZodObjectSchema>(
   config: AIToolConfig<TSchema>,
 ): OpenAIChatTool {
+  const parameters = zodObjectToJsonSchema(config.schema, config.diagnostics);
+
   return {
     type: 'function',
     function: {
       name: config.name,
       description: config.description,
-      parameters: zodObjectToJsonSchema(config.schema, config.diagnostics),
+      parameters: config.strict ? toOpenAIStrictJsonSchema(parameters) : parameters,
+      ...(config.strict ? { strict: true } : {}),
     },
   };
 }
@@ -36,11 +40,13 @@ export function toOpenAIFunction<TSchema extends ZodObjectSchema>(
 export function toOpenAIResponsesTool<TSchema extends ZodObjectSchema>(
   config: AIToolConfig<TSchema>,
 ): OpenAIResponsesTool {
+  const parameters = zodObjectToJsonSchema(config.schema, config.diagnostics);
+
   return {
     type: 'function',
     name: config.name,
     description: config.description,
-    parameters: zodObjectToJsonSchema(config.schema, config.diagnostics),
-    strict: false,
+    parameters: config.strict ? toOpenAIStrictJsonSchema(parameters) : parameters,
+    strict: config.strict === true,
   };
 }

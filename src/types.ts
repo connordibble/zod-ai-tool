@@ -13,7 +13,7 @@ export type Diagnostics = 'silent' | 'warn' | 'throw';
 
 /**
  * A Zod object schema. This is the only supported root shape for AI tool
- * inputs — both Anthropic and OpenAI require object-shaped tool parameters.
+ * inputs — providers require object-shaped tool parameters.
  */
 // `z.ZodObject` has different generic arity across Zod 3 and Zod 4, so we keep
 // this loose and rely on the call-site `TSchema extends ZodObjectSchema` bound.
@@ -34,6 +34,12 @@ export interface AIToolConfig<TSchema extends ZodObjectSchema> {
    * @default 'warn'
    */
   diagnostics?: Diagnostics;
+  /**
+   * Emit OpenAI strict-mode function schemas. This affects OpenAI tool builders
+   * only; Anthropic and Gemini keep their provider-native loose schema shapes.
+   * @default false
+   */
+  strict?: boolean;
 }
 
 /**
@@ -68,6 +74,7 @@ export interface OpenAIChatTool {
     name: string;
     description: string;
     parameters: JsonSchemaObject;
+    strict?: boolean;
   };
 }
 
@@ -80,5 +87,14 @@ export interface OpenAIResponsesTool {
   name: string;
   description: string;
   parameters: JsonSchemaObject;
-  strict: false;
+  strict: boolean;
+}
+
+/**
+ * Function declaration shape accepted by the Google Gemini API.
+ */
+export interface GeminiFunctionDeclaration {
+  name: string;
+  description: string;
+  parameters: JsonSchemaObject;
 }

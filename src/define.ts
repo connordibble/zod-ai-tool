@@ -1,10 +1,12 @@
 import type { z } from 'zod';
 
 import { toAnthropicTool } from './anthropic.js';
+import { toGeminiFunctionDeclaration } from './gemini.js';
 import { toOpenAIFunction, toOpenAIResponsesTool } from './openai.js';
 import type {
   AIToolConfig,
   AnthropicTool,
+  GeminiFunctionDeclaration,
   OpenAIChatTool,
   OpenAIResponsesTool,
   ZodObjectSchema,
@@ -24,6 +26,8 @@ export interface AITool<TSchema extends ZodObjectSchema> {
   openai: OpenAIChatTool;
   /** OpenAI tool definition (Responses API, flat shape). */
   openaiResponses: OpenAIResponsesTool;
+  /** Google Gemini function declaration. */
+  gemini: GeminiFunctionDeclaration;
   /** Parse and validate model output. Throws `ZodError` on invalid input. */
   validate: (input: unknown) => z.infer<TSchema>;
   /** Non-throwing parse. Returns the Zod `SafeParseReturn` for the installed version. */
@@ -48,6 +52,7 @@ export function defineAITool<TSchema extends ZodObjectSchema>(
     anthropic: toAnthropicTool(config),
     openai: toOpenAIFunction(config),
     openaiResponses: toOpenAIResponsesTool(config),
+    gemini: toGeminiFunctionDeclaration(config),
     validate: (input: unknown) => schema.parse(input) as z.infer<TSchema>,
     safeParse: (input: unknown) =>
       schema.safeParse(input) as ReturnType<TSchema['safeParse']>,
