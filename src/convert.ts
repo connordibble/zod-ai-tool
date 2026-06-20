@@ -1,13 +1,16 @@
-import { zodToJsonSchema } from 'zod-to-json-schema';
+import { createRequire } from 'node:module';
 import * as zod from 'zod';
 
 import type { Diagnostics, JsonSchemaObject, ZodObjectSchema } from './types.js';
+import type { zodToJsonSchema as zodToJsonSchemaType } from 'zod-to-json-schema';
 
 // Resolved lazily so the package works whether the consumer is on Zod 3 or 4.
 const zodNamespace = zod as unknown as {
   toJSONSchema?: (schema: unknown, options?: Record<string, unknown>) => Record<string, unknown>;
   ZodObject?: new (...args: never[]) => unknown;
 };
+const require = createRequire(import.meta.url);
+let cachedZodToJsonSchema: typeof zodToJsonSchemaType | undefined;
 
 const UNSUPPORTED_MESSAGE =
   'zod-ai-tool: schema contains a construct (.transform/.pipe/.preprocess/.refine) that does ' +
@@ -138,6 +141,17 @@ export function reportUnsupported(schema: unknown, diagnostics: Diagnostics): vo
   console.warn(UNSUPPORTED_MESSAGE);
 }
 
+/* v8 ignore start -- Zod 3-only fallback; covered by the matching CI matrix cells */
+function getZodToJsonSchema(): typeof zodToJsonSchemaType {
+  cachedZodToJsonSchema ??= (
+    require('zod-to-json-schema') as {
+      zodToJsonSchema: typeof zodToJsonSchemaType;
+    }
+  ).zodToJsonSchema;
+  return cachedZodToJsonSchema;
+}
+/* v8 ignore stop */
+
 /**
  * Run the underlying Zod -> JSON Schema conversion for the installed Zod version.
  *
@@ -158,7 +172,7 @@ function rawConvert(schema: ZodObjectSchema): Record<string, unknown> {
     });
   }
   // Zod 3 fallback via the `zod-to-json-schema` library.
-  return zodToJsonSchema(schema as never, {
+  return getZodToJsonSchema()(schema as never, {
     target: 'jsonSchema7',
     $refStrategy: 'none',
   }) as Record<string, unknown>;

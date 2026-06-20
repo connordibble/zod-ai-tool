@@ -1,7 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
-import { isZodObject, reportUnsupported, zodObjectToJsonSchema } from '../src/convert.js';
+import {
+  isZodObject,
+  reportUnsupported,
+  zodObjectToJsonSchema,
+} from '../src/convert.js';
 
 const Schema = z.object({
   qualifies: z.boolean(),
@@ -170,6 +174,14 @@ describe('reportUnsupported', () => {
       z.object({ u: z.union([z.string(), z.number().transform((n) => String(n))]) }),
       'warn',
     );
+    expect(warn).toHaveBeenCalledTimes(2);
+    warn.mockRestore();
+  });
+
+  it('detects Zod 3-style effects during the generic schema walk', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    reportUnsupported({ _def: { typeName: 'ZodEffects' } }, 'warn');
+    reportUnsupported({ _def: { effect: { type: 'transform' } } }, 'warn');
     expect(warn).toHaveBeenCalledTimes(2);
     warn.mockRestore();
   });
