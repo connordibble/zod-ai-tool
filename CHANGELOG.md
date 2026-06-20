@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/connordibble/zod-ai-tool/compare/v1.0.0...v1.1.0) (2026-06-20)
+
+
+### Features
+
+* add OpenAI strict mode and Gemini declarations ([6299427](https://github.com/connordibble/zod-ai-tool/commit/6299427ab0f7c62b18a2561a08a37b65912eb3b4))
+
 # 1.0.0 (2026-06-14)
 
 
