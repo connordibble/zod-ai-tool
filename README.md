@@ -215,6 +215,11 @@ npm with [provenance](https://docs.npmjs.com/generating-provenance-statements), 
 (`chore`, `docs`, `test`, `ci`, `refactor`) do not trigger a release. Follow the same commit
 convention in PRs so the version bump stays accurate.
 
+## Contributing
+
+See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for local setup, compatibility rules, testing
+expectations, and release conventions.
+
 ## License
 
 MIT
