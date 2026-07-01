@@ -91,10 +91,16 @@ export interface OpenAIResponsesTool {
 }
 
 /**
- * Function declaration shape accepted by the Google Gemini API.
+ * Function declaration shape accepted by the Google Gemini API
+ * (structurally compatible with `FunctionDeclaration` from `@google/genai`).
+ *
+ * The schema is emitted under `parametersJsonSchema`, which accepts standard
+ * JSON Schema. The legacy `parameters` field only accepts Gemini's restricted
+ * OpenAPI subset and rejects keywords this package emits for common Zod types
+ * (`const` for literals, `additionalProperties` for records, tuple `items`).
  */
 export interface GeminiFunctionDeclaration {
   name: string;
   description: string;
-  parameters: JsonSchemaObject;
+  parametersJsonSchema: JsonSchemaObject;
 }
