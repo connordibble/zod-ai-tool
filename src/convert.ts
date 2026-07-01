@@ -9,7 +9,6 @@ const zodNamespace = zod as unknown as {
   toJSONSchema?: (schema: unknown, options?: Record<string, unknown>) => Record<string, unknown>;
   ZodObject?: new (...args: never[]) => unknown;
 };
-const require = createRequire(import.meta.url);
 let cachedZodToJsonSchema: typeof zodToJsonSchemaType | undefined;
 
 const UNSUPPORTED_MESSAGE =
@@ -143,8 +142,10 @@ export function reportUnsupported(schema: unknown, diagnostics: Diagnostics): vo
 
 /* v8 ignore start -- Zod 3-only fallback; covered by the matching CI matrix cells */
 function getZodToJsonSchema(): typeof zodToJsonSchemaType {
+  // `createRequire` is deferred to this Zod 3-only path so Zod 4 consumers can
+  // bundle for non-Node runtimes without executing Node-specific APIs on import.
   cachedZodToJsonSchema ??= (
-    require('zod-to-json-schema') as {
+    createRequire(import.meta.url)('zod-to-json-schema') as {
       zodToJsonSchema: typeof zodToJsonSchemaType;
     }
   ).zodToJsonSchema;
