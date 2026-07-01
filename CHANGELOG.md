@@ -1,3 +1,22 @@
+# [2.0.0](https://github.com/connordibble/zod-ai-tool/compare/v1.1.0...v2.0.0) (2026-07-01)
+
+
+* feat!: emit Gemini declarations as parametersJsonSchema ([084e562](https://github.com/connordibble/zod-ai-tool/commit/084e562c7bcf33e57ae1b625cda1bce0764a5f4a))
+
+
+### Bug Fixes
+
+* throw on open objects under OpenAI strict mode ([a3ab6a2](https://github.com/connordibble/zod-ai-tool/commit/a3ab6a204f8cfecf101e0548e4b0d4c079996966))
+
+
+### BREAKING CHANGES
+
+* GeminiFunctionDeclaration now exposes the schema as
+parametersJsonSchema instead of parameters.
+
+Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01QKSuyniKW9pMQYvN7cQ3ii
+
 # [1.1.0](https://github.com/connordibble/zod-ai-tool/compare/v1.0.0...v1.1.0) (2026-06-20)
 
 
