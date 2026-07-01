@@ -110,6 +110,10 @@ key; the Responses API uses a flat shape. This package provides both.
 
 Gemini accepts function declarations inside a `functionDeclarations` array. This package
 returns the declaration and leaves SDK configuration and function-calling modes to your app.
+The schema is emitted under `parametersJsonSchema`, which accepts standard JSON Schema
+(supported by `@google/genai`). The legacy `parameters` field only accepts Gemini's restricted
+OpenAPI subset and rejects keywords this package emits for common Zod types — `const` for
+`z.literal`, `additionalProperties` for `z.record`, tuple-style `items` for `z.tuple`.
 
 ## Why This Exists
 
@@ -166,7 +170,8 @@ Strict mode affects OpenAI builders only. It sets `additionalProperties: false` 
 schemas, marks every property as required, and sets the provider tool's `strict` flag. Because
 OpenAI represents optional values with `null`, optional fields must already accept `null` in
 the Zod schema. A plain `z.string().optional()` field throws under `strict: true`; use
-`.nullable().optional()` or `.nullish()` instead.
+`.nullable().optional()` or `.nullish()` instead. (`.default()` also makes a field optional in
+the input schema, so it is subject to the same rule.)
 
 ```typescript
 // Throws under `strict: true`
@@ -175,6 +180,10 @@ z.object({ optional_value: z.string().optional() });
 // Accepted under `strict: true`
 z.object({ optional_value: z.string().nullable().optional() });
 ```
+
+Open objects — `z.record(...)`, `.catchall(...)`, `.passthrough()` — cannot be represented in
+strict mode, which forces `additionalProperties: false` on every object. They throw under
+`strict: true` rather than silently emitting a schema that forbids every key.
 
 ## Unsupported Zod Constructs
 
