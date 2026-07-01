@@ -74,4 +74,26 @@ describe('OpenAI strict mode', () => {
       }),
     ).toThrow(/requires optional fields to accept null.*parameters\.title/s);
   });
+
+  it('throws for records instead of silently closing them', () => {
+    expect(() =>
+      toOpenAIResponsesTool({
+        name: 'classify_activity',
+        description: 'Classify an engineering activity.',
+        schema: z.object({ scores: z.record(z.string(), z.number()) }),
+        strict: true,
+      }),
+    ).toThrow(/open objects.*parameters\.properties\.scores/s);
+  });
+
+  it('allows records when strict mode is off', () => {
+    const tool = toOpenAIResponsesTool({
+      name: 'classify_activity',
+      description: 'Classify an engineering activity.',
+      schema: z.object({ scores: z.record(z.string(), z.number()) }),
+    });
+
+    const scores = (tool.parameters.properties as Record<string, Record<string, unknown>>).scores;
+    expect(scores.additionalProperties).toEqual({ type: 'number' });
+  });
 });

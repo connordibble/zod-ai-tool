@@ -4,7 +4,7 @@ exports[`toGeminiFunctionDeclaration > matches a stable snapshot 1`] = `
 {
   "description": "d",
   "name": "classify_activity",
-  "parameters": {
+  "parametersJsonSchema": {
     "properties": {
       "confidence": {
         "maximum": 100,

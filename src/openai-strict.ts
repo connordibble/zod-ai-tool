@@ -2,7 +2,13 @@ import type { JsonSchemaObject } from './types.js';
 
 const STRICT_OPTIONAL_MESSAGE =
   'zod-ai-tool: OpenAI strict mode requires optional fields to accept null. ' +
-  'Use .nullable().optional() or .nullish() for optional fields before enabling strict mode.';
+  'Use .nullable().optional() or .nullish() for optional fields before enabling strict mode. ' +
+  '(.default() also makes a field optional in the input schema.)';
+
+const STRICT_OPEN_OBJECT_MESSAGE =
+  'zod-ai-tool: OpenAI strict mode requires additionalProperties: false on every object, so ' +
+  'open objects (z.record(...), .catchall(...), .passthrough()) cannot be represented. ' +
+  'Replace the open object with explicit properties or disable strict mode.';
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -69,6 +75,13 @@ function strictifySchemaNode(schema: unknown, path: string): unknown {
 
   if (!isObjectSchema(out)) {
     return out;
+  }
+
+  // An `additionalProperties` schema (or `true`) means the object accepts keys
+  // beyond `properties`. Strict mode forces `additionalProperties: false`, which
+  // would silently forbid every key of a record — throw instead of corrupting.
+  if ('additionalProperties' in out && out.additionalProperties !== false) {
+    throw new Error(`${STRICT_OPEN_OBJECT_MESSAGE} Offending object: ${path}.`);
   }
 
   const properties = isPlainObject(out.properties) ? out.properties : {};

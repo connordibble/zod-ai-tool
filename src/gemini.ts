@@ -11,6 +11,10 @@ import type {
  * The returned object can be used inside a Gemini tool's `functionDeclarations`
  * array. This package only creates the declaration; callers bring their own
  * Gemini SDK client and tool configuration.
+ *
+ * The schema is emitted as `parametersJsonSchema` (standard JSON Schema) rather
+ * than the legacy `parameters` field, whose restricted OpenAPI subset rejects
+ * keywords produced by common Zod types such as literals, records, and tuples.
  */
 export function toGeminiFunctionDeclaration<TSchema extends ZodObjectSchema>(
   config: AIToolConfig<TSchema>,
@@ -18,6 +22,6 @@ export function toGeminiFunctionDeclaration<TSchema extends ZodObjectSchema>(
   return {
     name: config.name,
     description: config.description,
-    parameters: zodObjectToJsonSchema(config.schema, config.diagnostics),
+    parametersJsonSchema: zodObjectToJsonSchema(config.schema, config.diagnostics),
   };
 }
