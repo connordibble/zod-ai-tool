@@ -39,6 +39,7 @@ pnpm install
 Useful commands:
 
 ```bash
+pnpm check           # the full gate: secrets scan, lint, typecheck, tests
 pnpm lint
 pnpm typecheck
 pnpm test
@@ -46,8 +47,8 @@ pnpm test:coverage
 pnpm build
 ```
 
-Before opening a pull request, run the full set when practical. At minimum, run the checks
-that cover the files you changed and say what you ran in the PR.
+Before opening a pull request, run `pnpm check`. At minimum, run the checks that cover the
+files you changed and say what you ran in the PR.
 
 ## Compatibility Contract
 

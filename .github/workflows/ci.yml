@@ -37,6 +37,10 @@ jobs:
       - name: Pin Zod ${{ matrix.zod }}
         run: pnpm add -D zod@${{ matrix.zod }}
 
+      - name: Secrets scan
+        if: matrix.node == 24 && matrix.zod == '4'
+        run: pnpm secrets:check
+
       - name: Lint
         run: pnpm lint
 

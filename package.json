@@ -59,7 +59,9 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "release": "semantic-release",
-    "prepublishOnly": "pnpm build"
+    "prepublishOnly": "pnpm build",
+    "secrets:check": "node scripts/no-secrets.mjs",
+    "check": "pnpm run secrets:check && pnpm run lint && pnpm run typecheck && pnpm test"
   },
   "dependencies": {
     "zod-to-json-schema": "^3.25.2"
